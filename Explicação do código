@@ -1,0 +1,10 @@
+Aqui está uma breve explicação do que o código faz:
+
+- Define o ID do servidor e o ID do canal onde o bot enviará as mensagens de feliz aniversário.
+- Define uma classe client que herda da classe discord.Client.
+- Sobrescreve o método on_ready para garantir que o bot esteja sincronizado com o servidor antes de executar outras ações.
+- Define comandos slash para interações no Discord usando a biblioteca app_commands.
+- Implementa comandos para adicionar, atualizar e enviar mensagens de feliz aniversário.
+- Define funções para carregar e salvar os aniversários em um arquivo JSON.
+- Define uma função check_birthdays() que verifica os aniversários diariamente e envia mensagens de feliz aniversário para o canal especificado.
+- Inicializa o bot usando o token fornecido.
