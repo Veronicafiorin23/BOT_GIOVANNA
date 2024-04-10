@@ -4,8 +4,11 @@ import json
 import datetime
 import asyncio
 
-#Entrada do bot sincronizando com o servidor
+#Definindo variaveis
 id_do_servidor = COLOQUE_SEU_ID_AQUI
+channel_id = COLOQUE_O_ID_DO_CANAL_AQUI
+
+#Entrada do bot sincronizando com o servidor
 class client(discord.Client):
     def __init__(self):
         super().__init__(intents=discord.Intents.default())
