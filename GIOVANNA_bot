@@ -4,7 +4,6 @@ import json
 import datetime
 import asyncio
 
-
 #Entrada do bot sincronizando com o servidor
 id_do_servidor = COLOQUE_SEU_ID_AQUI
 class client(discord.Client):
