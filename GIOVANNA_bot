@@ -1,0 +1,79 @@
+import discord
+from discord import app_commands
+import json
+import datetime
+import asyncio
+
+#Entrada do bot sincronizando com o servidor
+id_do_servidor = COLOQUE_SEU_ID_AQUI
+class client(discord.Client):
+    def __init__(self):
+        super().__init__(intents=discord.Intents.default())
+        self.sinced = False
+    async def on_ready(self):
+        await self.wait_until_ready()
+        if not self.sinced:
+            await tree.sync(guild=discord.Object(id=id_do_servidor))
+            self.sinced = True
+        print(f"Entramos como {self.user}.")
+aclient = client()
+tree = app_commands.CommandTree(aclient)
+
+@tree.command(guild=discord.Object(id=id_do_servidor), name='giovanna', description='informativo')
+async def slash1(interaction: discord.Interaction):
+    await interaction.response.send_message(f"Olá! Estou aqui para lhe explicar como adicionar a data do seu aniversario no banco de dados dos aniversariantes. \n \n Para isto, você deve escrever o comando: **/data**. \n Logo em seguida digitar a data e o mês do seu aniversário, assim: **DD-MM**. \n Caso queira atualizar a sua data de aniversario, escreva o comando: **/update**. \n \n Apos enviar esta seguencia de comandos sua data já estara adiconada!", ephemeral=False)
+
+# Comando para adicionar aniversário
+@tree.command(guild=discord.Object(id=id_do_servidor),name='data', description='dd-mm')
+async def add_birthday(interaction, member: discord.Member, date: str):
+    try:
+        birthday_date = datetime.datetime.strptime(date, "%d-%m")
+    except ValueError:
+        await interaction.response.send_message("Formato de data inválido. Use DD-MM (ex: 01-01).")
+        return
+    birthdays = load_birthdays()
+    birthdays[str(member.id)] = date
+    save_birthdays(birthdays)
+    await interaction.response.send_message(f"Aniversário de {member.display_name} adicionado!")
+
+filename = "birthdays.json" 
+
+#Comando de atualização de data
+@tree.command(guild=discord.Object(id=id_do_servidor), name='update', description='Atualiza sua data de aniversário')
+async def update_birthday(interaction, member: discord.Member, date: str):
+      member_id = str(interaction.user.id)
+      birthdays = load_birthdays()
+      # Atualiza a data de aniversário do membro
+      birthdays[member_id] = date
+      save_birthdays(birthdays)
+      await interaction.response.send_message(f"Sua data de aniversário foi atualizada para {date}.", ephemeral=True)
+
+# Carregar aniversários do arquivo JSON
+def load_birthdays():
+    try:
+        with open(filename, "r") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return {}
+
+# Salvar aniversários no arquivo JSON
+def save_birthdays(birthdays):
+    with open(filename, "w") as file:
+        json.dump(birthdays, file)
+
+# Verificar aniversários diariamente
+@aclient.event
+async def check_birthdays():
+    await aclient.wait_until_ready()
+    channel = aclient.get_channel(channel_id)  # Coloque o ID do canal #geral aqui
+    while not aclient.is_closed():
+        birthdays = load_birthdays()
+        now = datetime.datetime.now().strftime("%d-%m")
+        for member_id, birthday_date in birthdays.items():
+            if birthday_date == now:
+                member = aclient.get_user(int(member_id))
+                await channel.send(f"🎉 Feliz aniversário, {member.mention}! 🎉")
+        await asyncio.sleep(86400)  # Espera 24 horas
+
+# Inicialização do bot
+aclient.run("COLOQUE_SEU_TOKEN_AQUI")
