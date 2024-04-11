@@ -4,11 +4,12 @@ import json
 import datetime
 import asyncio
 
-#Definindo variaveis
-id_do_servidor = COLOQUE_SEU_ID_AQUI
-channel_id = COLOQUE_O_ID_DO_CANAL_AQUI
+from discord.ui.view import View
 
 #Entrada do bot sincronizando com o servidor
+id_do_servidor = COLOQUE_O_ID_DO_SERVIDOR_AQUI
+channel_id = COLOQUE_O_ID_DO_CANAL_AQUI
+
 class client(discord.Client):
     def __init__(self):
         super().__init__(intents=discord.Intents.default())
@@ -22,12 +23,9 @@ class client(discord.Client):
 aclient = client()
 tree = app_commands.CommandTree(aclient)
 
-@tree.command(guild=discord.Object(id=id_do_servidor), name='giovanna', description='informativo')
-async def slash1(interaction: discord.Interaction):
-    await interaction.response.send_message(f"Olá! Estou aqui para lhe explicar como adicionar a data do seu aniversario no banco de dados dos aniversariantes. \n \n Para isto, você deve escrever o comando: **/data**. \n Logo em seguida digitar a data e o mês do seu aniversário, assim: **DD-MM**. \n Caso queira atualizar a sua data de aniversario, escreva o comando: **/update**. \n \n Apos enviar esta seguencia de comandos sua data já estara adiconada!", ephemeral=False)
 
 # Comando para adicionar aniversário
-@tree.command(guild=discord.Object(id=id_do_servidor),name='data', description='dd-mm')
+@tree.command(guild=discord.Object(id=id_do_servidor), name='data', description='dd-mm')
 async def add_birthday(interaction, member: discord.Member, date: str):
     try:
         birthday_date = datetime.datetime.strptime(date, "%d-%m")
@@ -49,7 +47,38 @@ async def update_birthday(interaction, member: discord.Member, date: str):
       # Atualiza a data de aniversário do membro
       birthdays[member_id] = date
       save_birthdays(birthdays)
-      await interaction.response.send_message(f"Sua data de aniversário foi atualizada para {date}.", ephemeral=True)
+      await interaction.response.send_message(f"A data de aniversário do membro {member.mention} foi atualizada para {date}.", ephemeral=True)
+  
+# Comando para os membros verem sua data de aniversário atual
+@tree.command(guild=discord.Object(id=id_do_servidor), name='verdata', description='Visualiza sua data de aniversário atual')
+async def view_birthday(interaction, member: discord.Member):
+    member_id = str(member.id)
+    birthdays = load_birthdays()
+    if member_id in birthdays:
+        birthday_date = birthdays[member_id]
+        await interaction.response.send_message(f"Sua data de aniversário atual é {birthday_date}.", ephemeral=True)
+    else:
+        await interaction.response.send_message("Você ainda não definiu sua data de aniversário.", ephemeral=True)
+
+#
+@tree.command(guild=discord.Object(id=id_do_servidor), name='giovanna', description='informativo')
+async def slash1(interaction: discord.Interaction):
+    await interaction.response.send_message(f"Olá! Estou aqui para lhe explicar como adicionar a data do seu aniversario no banco de dados dos aniversariantes. \n \n Para isto, você deve escrever o comando: **/data**. \n Caso queira atualizar a sua data de aniversario, escreva o comando: **/update**. \n Caso queira ver a data armazenada, escreva o comando: **/verdata**.\n \n Apos enviar esta seguencia de comandos sua data já estara adiconada!", ephemeral=False)
+
+
+# Função para processar a interação dos botões
+@aclient.event
+async def on_button(interaction):
+    if interaction.custom_id == 'data':
+        # Executar o comando /data
+        await add_birthday(interaction, interaction.user, datetime.datetime.now().strftime("%d-%m"))
+    elif interaction.custom_id == 'update':
+        # Executar o comando /update
+        await update_birthday(interaction, interaction.user, datetime.datetime.now().strftime("%d-%m"))
+    elif interaction.custom_id == 'verdata':
+        # Executar o comando /verdata
+        await view_birthday(interaction, interaction.user)
+
 
 # Carregar aniversários do arquivo JSON
 def load_birthdays():
@@ -79,4 +108,4 @@ async def check_birthdays():
         await asyncio.sleep(86400)  # Espera 24 horas
 
 # Inicialização do bot
-aclient.run("COLOQUE_SEU_TOKEN_AQUI")
+aclient.run("TOKEN")
